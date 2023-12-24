@@ -5,6 +5,7 @@ const cors = require("cors");
 const connectDB = require("./config/db.js");
 const colors = require("colors");
 const userRoutes = require("./routes/userRoutes.js");
+const { notFound, errorHandler } = require("./middleware/errorMiddleware.js");
 
 const app = express();
 dotenv.config();
@@ -24,6 +25,9 @@ app.get("/api/chat/:id", (req, res) => {
 });
 
 app.use("/api/user", userRoutes);
+
+app.use(notFound);
+app.use(errorHandler);
 
 app.get("/ping", (req, res) => {
   res.send("pong");
