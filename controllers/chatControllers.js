@@ -6,11 +6,11 @@ const accessChat = asyncHandler(async (req, res) => {
   const { userId } = req.body;
 
   if (!userId) {
-    console.error("UserId param nt sent with request");
+    console.log("UserId param not sent with request");
     return res.sendStatus(400);
   }
 
-  let isChat = await Chat.find({
+  var isChat = await Chat.find({
     isGroupChat: false,
     $and: [
       { users: { $elemMatch: { $eq: req.user._id } } },
@@ -28,7 +28,7 @@ const accessChat = asyncHandler(async (req, res) => {
   if (isChat.length > 0) {
     res.send(isChat[0]);
   } else {
-    let chatData = {
+    var chatData = {
       chatName: "sender",
       isGroupChat: false,
       users: [req.user._id, userId],
@@ -36,12 +36,11 @@ const accessChat = asyncHandler(async (req, res) => {
 
     try {
       const createdChat = await Chat.create(chatData);
-      const fullChat = await Chat.findOne({ _id: createdChat._id }).populate(
+      const FullChat = await Chat.findOne({ _id: createdChat._id }).populate(
         "users",
         "-password"
       );
-
-      res.status(200).send(fullChat);
+      res.status(200).json(FullChat);
     } catch (error) {
       res.status(400);
       throw new Error(error.message);
@@ -49,4 +48,24 @@ const accessChat = asyncHandler(async (req, res) => {
   }
 });
 
-module.exports = { accessChat };
+const fetchChats = asyncHandler(async (req, res) => {
+  try {
+    Chat.find({ users: { $elemMatch: { $eq: req.user._id } } })
+      .populate("users", "-password")
+      .populate("groupAdmin", "-password")
+      .populate("latestMessage")
+      .sort({ updatedAt: -1 })
+      .then(async (results) => {
+        results = await User.populate(results, {
+          path: "latestMessage.sender",
+          select: "name pic email",
+        });
+        res.status(200).send(results);
+      });
+  } catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
+});
+
+module.exports = { accessChat, fetchChats };
