@@ -28,6 +28,24 @@ app.get("/ping", (req, res) => {
   res.send("pong");
 });
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server started on PORT ${PORT}`.yellow.bold);
+});
+
+const io = require("socket.io")(server, {
+  pingTimeout: 60000,
+  cors: {
+    origin: "http://127.0.0.1:5173",
+    "Access-Control-Allow-Origin": true,
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("connected to socket.io");
+
+  socket.on("setup", (userData) => {
+    socket.join(userData._id);
+    console.log("userData._id", userData._id);
+    socket.emit("connected");
+  });
 });
