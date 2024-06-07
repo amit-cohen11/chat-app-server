@@ -36,7 +36,6 @@ const io = require("socket.io")(server, {
   pingTimeout: 60000,
   cors: {
     origin: "http://127.0.0.1:5173",
-    "Access-Control-Allow-Origin": true,
   },
 });
 
@@ -47,5 +46,22 @@ io.on("connection", (socket) => {
     socket.join(userData._id);
     console.log("userData._id", userData._id);
     socket.emit("connected");
+  });
+
+  socket.on("join chat", (room) => {
+    socket.join(room);
+    console.log("user joined room: ", room);
+  });
+
+  socket.on("new message", (newMessageReceived) => {
+    let chat = newMessageReceived.chat;
+
+    if (!chat.users) console.log("chat.user not defined");
+
+    chat.users.forEach((user) => {
+      if (user._id == newMessageReceived.sender._id) return;
+
+      socket.in(user._id).emit("message received", newMessageReceived);
+    });
   });
 });
