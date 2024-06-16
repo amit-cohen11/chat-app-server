@@ -21,12 +21,12 @@ app.use("/api/user", userRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
 
-app.use(notFound);
-app.use(errorHandler);
-
 app.get("/ping", (req, res) => {
   res.send("pong");
 });
+
+app.use(notFound);
+app.use(errorHandler);
 
 const server = app.listen(PORT, () => {
   console.log(`Server started on PORT ${PORT}`.yellow.bold);
